@@ -33,6 +33,7 @@ var MindMap = (function() {
       tree: null, scale: 1, offsetX: 0, offsetY: 0,
       collapsed: new Set(), activeFilter: null
     };
+    this._zoomWin = false; // zoom-window mode flag
     this._els = {};   // cached DOM refs
     this._listeners = []; // track added listeners for destroy
     this._init();
@@ -247,11 +248,12 @@ var MindMap = (function() {
 
       if (zoomLabel) {
         this._els.zoomLabel = zoomLabel;
-        this._on(zoomLabel, 'click', function() {
+        var that2 = this;
+        this._on(zoomLabel, 'click', function zoomClick() {
           var input = document.createElement('input');
           input.type = 'number';
           input.className = 'mw-zoom-input';
-          input.value = Math.round(that._state.scale * 100);
+          input.value = Math.round(that2._state.scale * 100);
           input.min = 20; input.max = 200;
           var label = this;
           label.parentNode.replaceChild(input, label);
@@ -261,12 +263,12 @@ var MindMap = (function() {
             var span = document.createElement('span');
             span.className = 'mw-zoom-label';
             input.parentNode.replaceChild(span, input);
-            if (!isNaN(val) && val >= 20 && val <= 200) that._updateZoom(val);
-            span.textContent = Math.round(that._state.scale * 100) + '%';
-            that._on(span, 'click', arguments.callee);
+            if (!isNaN(val) && val >= 20 && val <= 200) that2._updateZoom(val);
+            span.textContent = Math.round(that2._state.scale * 100) + '%';
+            span.addEventListener('click', zoomClick);
           }
-          that._on(input, 'blur', done);
-          that._on(input, 'keydown', function(e) {
+          input.addEventListener('blur', done);
+          input.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
             if (e.key === 'Escape') { done(); }
           });
@@ -284,10 +286,14 @@ var MindMap = (function() {
     _adaptTree: function(node, depth) {
       depth = depth || 0;
       if (!node || typeof node !== 'object') return { text: String(node || ''), children: [] };
+      var dirs = this.opts.directions || { 0: 'coluna', 1: 'linha' };
       var that = this;
       var n = { text: node.content || node.text || node.name || '(sem texto)', children: [] };
-      if (depth === 0) n._direction = 'coluna';
-      else if (depth === 1) n._direction = 'linha';
+      if (dirs.hasOwnProperty(depth)) {
+        n._direction = dirs[depth];
+      } else if (dirs.hasOwnProperty('default')) {
+        n._direction = dirs.default;
+      }
       if (node._cor) n._cor = node._cor;
       if (node.children && node.children.length) {
         n.children = node.children.map(function(c) { return that._adaptTree(c, depth + 1); });
@@ -370,6 +376,7 @@ var MindMap = (function() {
         nd._depth = depth;
         measure(nd);
         var dir = nd._direction || parentDir || 'coluna';
+        nd._effDir = dir; // save for renderConns
         if (!nd.children || nd.children.length === 0 || s.collapsed.has(nd._id)) {
           nd._sw = nd._w; nd._sh = nd._h;
           nd._extentTop = -nd._h / 2;
@@ -453,7 +460,7 @@ var MindMap = (function() {
         nd._y = py + (nd._oy || 0);
         if (nd.children && !s.collapsed.has(nd._id)) {
           for (var i = 0; i < nd.children.length; i++) {
-            position(nd.children[i], px, py);
+            position(nd.children[i], nd._x, nd._y);
           }
         }
       }
@@ -543,7 +550,7 @@ var MindMap = (function() {
 
       function renderConns(nd) {
         if (!nd.children || s.collapsed.has(nd._id)) return;
-        var dir = nd._direction || 'coluna';
+        var dir = nd._effDir || nd._direction || 'coluna';
         if (dir === 'coluna') {
           var x1 = nd._x + ox, y1 = nd._y + nd._h / 2 + oy;
           var mpr = CONFIG.maxPerRow;
@@ -674,9 +681,18 @@ var MindMap = (function() {
     _toggleZoomWin: function(btn) {
       this._zoomWin = !this._zoomWin;
       btn.classList.toggle('is-active', this._zoomWin);
-      var viewer = this._els.viewer;
-      viewer.style.cursor = this._zoomWin ? 'crosshair' : 'grab';
+      this.container.style.cursor = this._zoomWin ? 'crosshair' : '';
       this._els.overlay.style.display = 'none';
+    },
+
+    // ── Internal: exit zoom-win mode ────────────────────────
+    _exitZoomWin: function() {
+      if (!this._zoomWin) return;
+      this._zoomWin = false;
+      this._els.overlay.style.display = 'none';
+      this.container.style.cursor = '';
+      var btn = document.querySelector('.zoom-win-btn');
+      if (btn) btn.classList.remove('is-active');
     },
 
     // ── Internal: toggle fullscreen ─────────────────────────
@@ -706,11 +722,11 @@ var MindMap = (function() {
 
       // Pan via mouse
       var isPan = false, sx, sy, ox, oy;
-      this._on(viewer, 'mousedown', function(e) {
+      this._on(panel, 'mousedown', function(e) {
         if (that._zoomWin) return;
         if (e.target.closest('.mw-node') || e.target.closest('.mw-btn') || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
         isPan = true; sx = e.clientX; sy = e.clientY; ox = s.offsetX; oy = s.offsetY;
-        viewer.style.cursor = 'grabbing';
+        panel.style.cursor = 'grabbing';
       });
       this._on(window, 'mousemove', function(e) {
         if (!isPan) return;
@@ -719,7 +735,7 @@ var MindMap = (function() {
         that._applyViewTransform();
       });
       this._on(window, 'mouseup', function() {
-        if (isPan) { isPan = false; viewer.style.cursor = 'grab'; }
+        if (isPan) { isPan = false; panel.style.cursor = ''; }
       });
 
       // Zoom via scroll
@@ -744,14 +760,14 @@ var MindMap = (function() {
 
       // Touch pan
       var ti = null, tX, tY, tOX, tOY;
-      this._on(viewer, 'touchstart', function(e) {
+      this._on(panel, 'touchstart', function(e) {
         if (e.touches.length === 1) {
           ti = e.touches[0].identifier;
           tX = e.touches[0].clientX; tY = e.touches[0].clientY;
           tOX = s.offsetX; tOY = s.offsetY;
         }
       }, { passive: true });
-      this._on(viewer, 'touchmove', function(e) {
+      this._on(panel, 'touchmove', function(e) {
         if (e.touches.length === 1 && e.touches[0].identifier === ti) {
           e.preventDefault();
           s.offsetX = tOX + (e.touches[0].clientX - tX);
@@ -760,9 +776,10 @@ var MindMap = (function() {
         }
       }, { passive: false });
 
-      // Ctrl+Z center
+      // Ctrl+Z center, ESC cancela zoom janela
       this._on(document, 'keydown', function(e) {
         if (e.ctrlKey && e.key === 'z' && !e.shiftKey) { e.preventDefault(); that.centerView(); }
+        if (e.key === 'Escape') { that._exitZoomWin(); }
       });
 
       // Fullscreen change
@@ -787,7 +804,7 @@ var MindMap = (function() {
       var panel = this.container;
       var zwStartX, zwStartY;
 
-      this._on(viewer, 'mousedown', function(e) {
+      this._on(panel, 'mousedown', function(e) {
         if (!that._zoomWin) return;
         if (e.target.closest('.mw-btn') || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
         var r = panel.getBoundingClientRect();
@@ -801,7 +818,7 @@ var MindMap = (function() {
         e.preventDefault();
       });
 
-      this._on(viewer, 'mousemove', function(e) {
+      this._on(window, 'mousemove', function(e) {
         if (!that._zoomWin || overlay.style.display === 'none') return;
         var r = panel.getBoundingClientRect();
         var cx = e.clientX - r.left, cy = e.clientY - r.top;
@@ -813,14 +830,14 @@ var MindMap = (function() {
         overlay.style.height = h + 'px';
       });
 
-      this._on(viewer, 'mouseup', function(e) {
+      this._on(window, 'mouseup', function(e) {
         if (!that._zoomWin || overlay.style.display === 'none') return;
         overlay.style.display = 'none';
         var r = panel.getBoundingClientRect();
         var cx = e.clientX - r.left, cy = e.clientY - r.top;
         var l = Math.min(zwStartX, cx), t = Math.min(zwStartY, cy);
         var w = Math.abs(cx - zwStartX), h = Math.abs(cy - zwStartY);
-        if (w < 10 || h < 10) return;
+        if (w < 10 || h < 10) { that._exitZoomWin(); return; }
         var worldL = (l - s.offsetX) / s.scale;
         var worldT = (t - s.offsetY) / s.scale;
         var worldR = (l + w - s.offsetX) / s.scale;
@@ -837,10 +854,7 @@ var MindMap = (function() {
         s.offsetY = ph / 2 - worldCY * s.scale;
         that._applyViewTransform();
         that._updateZoomLabel();
-        that._zoomWin = false;
-        var btn = panel.querySelector('.zoom-win-btn');
-        if (btn) btn.classList.remove('is-active');
-        viewer.style.cursor = 'grab';
+        that._exitZoomWin();
       });
     },
   };

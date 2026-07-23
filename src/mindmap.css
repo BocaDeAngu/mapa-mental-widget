@@ -14,8 +14,7 @@
 .mw-zoom-label:hover{border-color:var(--border,#c8bda8);background:var(--inputBg,#ffffff)}
 .mw-zoom-input{width:55px;background:var(--inputBg,#ffffff);color:var(--inputColor,#1e293b);border:1px solid #e94560;border-radius:4px;padding:1px 4px;font-size:var(--fs-sm);text-align:center}
 .mw-container{position:relative;width:100%;height:calc(100vh - 140px);border:1px solid var(--border,#c8bda8);border-radius:8px;overflow:hidden;background:var(--bg,#faf5ee)}
-.mw-viewer{width:100%;height:100%;position:relative;transform-origin:0 0;cursor:grab}
-.mw-viewer:active{cursor:grabbing}
+.mw-viewer{width:100%;height:100%;position:relative;transform-origin:0 0}
 .mw-svg-conns{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;overflow:visible}
 .mw-nodes-layer{position:absolute;top:0;left:0;z-index:2}
 .mw-node{position:absolute;display:flex;align-items:center;justify-content:center;text-align:center;cursor:pointer;transition:opacity .2s;user-select:none;white-space:nowrap;min-width:40px;min-height:30px;font-family:'Segoe UI',system-ui,sans-serif;z-index:2}
