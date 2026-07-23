@@ -1,0 +1,38 @@
+/* mapa-mental-widget — scoped styles */
+.mw-info{display:flex;gap:.35rem;align-items:center;overflow-x:auto;white-space:nowrap;font-size:var(--fs-base);color:var(--text2,#5a5a5a);padding:.35rem .6rem;background:var(--surface,#faf5ee);border-radius:8px;border:1px solid var(--border,#c8bda8);margin-bottom:.6rem}
+.mw-info > *{flex-shrink:0}
+.mw-legend{display:flex;gap:.4rem;align-items:center;flex-shrink:0}
+.mw-info label{font-size:var(--fs-sm);color:var(--text2,#5a5a5a);display:flex;align-items:center;gap:4px;flex-shrink:0}
+.mw-info select{background:var(--inputBg,#ffffff);color:var(--inputColor,#1e293b);border:1px solid var(--border,#c8bda8);border-radius:4px;padding:2px 6px;font-size:var(--fs-sm)}
+.mw-btn{background:var(--surface,#faf5ee);color:var(--btnColor,#1e293b);border:1px solid var(--border,#c8bda8);border-radius:6px;padding:2px 8px;font-size:var(--fs-sm);cursor:pointer;transition:.15s;white-space:nowrap;flex-shrink:0}
+.mw-btn:hover{background:var(--bg2,#e8e0d0);border-color:#e94560}
+.mw-btn-p{background:#e94560;border-color:#e94560;color:#fff}
+.mw-btn-p:hover{background:#d63851}
+.mw-btn.is-active{background:var(--bs-primary,#3a6ea5);border-color:var(--bs-primary,#3a6ea5);color:#fff}
+.mw-zoomwin-overlay{position:absolute;pointer-events:none;z-index:20;border:2px dashed #e94560;background:rgba(233,69,96,0.08);display:none}
+.mw-zoom-label{display:inline-block;min-width:38px;font-size:var(--fs-sm);font-weight:600;color:var(--text,#1e293b);cursor:pointer;padding:1px 6px;border:1px solid transparent;border-radius:4px;transition:.15s}
+.mw-zoom-label:hover{border-color:var(--border,#c8bda8);background:var(--inputBg,#ffffff)}
+.mw-zoom-input{width:55px;background:var(--inputBg,#ffffff);color:var(--inputColor,#1e293b);border:1px solid #e94560;border-radius:4px;padding:1px 4px;font-size:var(--fs-sm);text-align:center}
+.mw-container{position:relative;width:100%;height:calc(100vh - 140px);border:1px solid var(--border,#c8bda8);border-radius:8px;overflow:hidden;background:var(--bg,#faf5ee)}
+.mw-viewer{width:100%;height:100%;position:relative;transform-origin:0 0;cursor:grab}
+.mw-viewer:active{cursor:grabbing}
+.mw-svg-conns{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;overflow:visible}
+.mw-nodes-layer{position:absolute;top:0;left:0;z-index:2}
+.mw-node{position:absolute;display:flex;align-items:center;justify-content:center;text-align:center;cursor:pointer;transition:opacity .2s;user-select:none;white-space:nowrap;min-width:40px;min-height:30px;font-family:'Segoe UI',system-ui,sans-serif;z-index:2}
+.mw-node .mw-node-text{pointer-events:none}
+.mw-dot{display:inline-block;width:16px;height:16px;border-radius:50%;margin-right:4px;flex-shrink:0;vertical-align:middle}
+.mw-node .mw-collapse-btn{position:absolute;bottom:-9px;left:50%;transform:translateX(-50%);width:18px;height:18px;border-radius:50%;background:#1e2a4a;border:2px solid #2a3a6a;color:#e0e0e0;font-size:var(--fs-xs);line-height:14px;text-align:center;cursor:pointer;z-index:5;display:none;transition:.15s}
+.mw-node:hover .mw-collapse-btn{display:block}
+.mw-node .mw-collapse-btn:hover{background:#e94560;border-color:#e94560}
+.mw-loading{display:flex;align-items:center;justify-content:center;height:100%;color:#8899bb;font-size:var(--fs-base);flex-direction:column;gap:8px;position:absolute;inset:0;z-index:10;background:rgba(26,26,46,.85)}
+.mw-loading .mw-spinner{width:28px;height:28px;border:3px solid #2a3a6a;border-top-color:#e94560;border-radius:50%;animation:mw-spin .8s linear infinite}
+@keyframes mw-spin{to{transform:rotate(360deg)}}
+.mw-legend span[data-cor]{cursor:pointer;padding:2px 5px;border-radius:6px;transition:.15s}
+.mw-legend span[data-cor]:hover{background:rgba(255,255,255,.1)}
+.mw-legend span[data-cor].is-active{background:rgba(255,255,255,.15);outline:2px solid}
+.mw-legend-todos{cursor:pointer;padding:2px 5px;border-radius:6px;transition:.15s;color:var(--text2,#5a5a5a);user-select:none}
+.mw-legend-todos:hover{background:rgba(255,255,255,.1);color:var(--text,#1e293b)}
+.mw-node-dimmed{opacity:.15;filter:grayscale(.8);transition:opacity .3s,filter .3s}
+.mw-node-highlight{opacity:1;filter:none;transition:opacity .3s,filter .3s}
+.mw-fullscreen .mw-container{height:100vh;border-radius:0;border:none}
+.mw-fullscreen .mw-info{border-radius:0;margin-bottom:0}
