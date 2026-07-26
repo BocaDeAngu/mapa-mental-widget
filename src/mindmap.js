@@ -174,16 +174,10 @@ var MindMap = (function() {
     },
 
     // ── Public: render legend into given container ──────────
-    renderLegend: function(containerEl, contagem) {
+    // grupos: array de { cor, label } — se omitido, não renderiza labels hardcoded
+    renderLegend: function(containerEl, contagem, grupos) {
       if (!containerEl) return;
-      var cores = [
-        { cor: '#cbd5e1', label: 'Pendente' },
-        { cor: '#7dd3fc', label: 'Estoque' },
-        { cor: '#fed7aa', label: 'Programado' },
-        { cor: '#f59e0b', label: 'Dobra' },
-        { cor: '#93c5fd', label: 'Expedição' },
-        { cor: '#bbf7d0', label: 'Finalizado' },
-      ];
+      var cores = grupos || [];
       var total = 0;
       if (contagem) {
         for (var k in contagem) if (contagem.hasOwnProperty(k)) total += contagem[k];
