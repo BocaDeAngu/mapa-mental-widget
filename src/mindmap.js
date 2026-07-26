@@ -11,10 +11,10 @@ var MindMap = (function() {
       borderWidth: 2, icon: '', shadow: false, padding: '4px 10px',
     },
     nodeColors: {
-      root:    { bg: '#1e293b', color: '#ffffff', border: '#334155' },
-      client:  { bg: '#f8fafc', color: '#1e293b', border: '#94a3b8' },
-      pedido:  { bg: '#f8fafc', color: '#1e293b', border: '#94a3b8' },
-      material:{ bg: '#fefce8', color: '#1e293b', border: '#eab308' },
+      0: { bg: '#1e293b', color: '#ffffff', border: '#334155' },
+      1: { bg: '#f8fafc', color: '#1e293b', border: '#94a3b8' },
+      2: { bg: '#f8fafc', color: '#1e293b', border: '#94a3b8' },
+      default: { bg: '#fefce8', color: '#1e293b', border: '#eab308' },
     },
   };
 
@@ -23,19 +23,19 @@ var MindMap = (function() {
   function escHtml(t) { var d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
 
   // ── Constructor ───────────────────────────────────────────
-  function MindMap(container, data, opts) {
-    if (!(this instanceof MindMap)) return new MindMap(container, data, opts);
+  function MindMap(container, treeData, opts) {
+    if (!(this instanceof MindMap)) return new MindMap(container, treeData, opts);
     if (!container) throw new Error('MindMap: container element required');
     this.container = container;
-    this.data = data;
+    this.treeData = treeData;
     this.opts = opts || {};
     this._state = {
       tree: null, scale: 1, offsetX: 0, offsetY: 0,
       collapsed: new Set(), activeFilter: null
     };
-    this._zoomWin = false; // zoom-window mode flag
-    this._els = {};   // cached DOM refs
-    this._listeners = []; // track added listeners for destroy
+    this._zoomWin = false;
+    this._els = {};
+    this._listeners = [];
     this._init();
   }
 
@@ -105,18 +105,16 @@ var MindMap = (function() {
 
     // ── Public: render ──────────────────────────────────────
     render: function() {
-      var data = this.data;
       var s = this._state;
 
       this._q('.mw-loading').style.display = 'none';
 
-      if (!data || !data.treeData || !data.treeData.children || data.treeData.children.length === 0) {
+      if (!this.treeData || !this.treeData.children || this.treeData.children.length === 0) {
         this._els.nodes.innerHTML = '<div style="color:#667;padding:20px">Nenhum dado disponivel</div>';
         return;
       }
 
-      var adapted = this._adaptTree(data.treeData);
-      var tree = this._normalizeTree(adapted);
+      var tree = this._normalizeTree(this.treeData, 0);
       s.tree = tree;
       this._renderTree(tree);
     },
@@ -174,14 +172,13 @@ var MindMap = (function() {
     },
 
     // ── Public: render legend into given container ──────────
-    // grupos: array de { cor, label } — se omitido, não renderiza labels hardcoded
-    renderLegend: function(containerEl, contagem, grupos) {
+    // grupos: array opcional de { cor, label }
+    renderLegend: function(containerEl, grupos) {
       if (!containerEl) return;
       var cores = grupos || [];
+      var contagem = this._calcContagem();
       var total = 0;
-      if (contagem) {
-        for (var k in contagem) if (contagem.hasOwnProperty(k)) total += contagem[k];
-      }
+      for (var k in contagem) if (contagem.hasOwnProperty(k)) total += contagem[k];
 
       var html = '<div class="mw-legend" id="' + this._uid('legend') + '">';
       html += '<span class="mw-legend-todos" id="' + this._uid('todos') + '">';
@@ -276,25 +273,6 @@ var MindMap = (function() {
       if (fullscreenBtn) this._on(fullscreenBtn, 'click', function() { that._toggleFullscreen(fullscreenBtn); });
     },
 
-    // ── Internal: adaptTree ─────────────────────────────────
-    _adaptTree: function(node, depth) {
-      depth = depth || 0;
-      if (!node || typeof node !== 'object') return { text: String(node || ''), children: [] };
-      var dirs = this.opts.directions || { 0: 'coluna', 1: 'linha' };
-      var that = this;
-      var n = { text: node.content || node.text || node.name || '(sem texto)', children: [] };
-      if (dirs.hasOwnProperty(depth)) {
-        n._direction = dirs[depth];
-      } else if (dirs.hasOwnProperty('default')) {
-        n._direction = dirs.default;
-      }
-      if (node._cor) n._cor = node._cor;
-      if (node.children && node.children.length) {
-        n.children = node.children.map(function(c) { return that._adaptTree(c, depth + 1); });
-      }
-      return n;
-    },
-
     // ── Internal: normalizeTree ─────────────────────────────
     _normalizeTree: function(raw, depth) {
       depth = depth || 0;
@@ -307,7 +285,12 @@ var MindMap = (function() {
         text: raw.text || raw.title || raw.name || '(sem texto)',
         children: [], _depth: depth, _id: randId(),
       };
-      if (raw._direction === 'linha' || raw._direction === 'coluna') node._direction = raw._direction;
+      var dirs = this.opts.directions || { 0: 'coluna', 1: 'linha' };
+      if (dirs.hasOwnProperty(depth)) {
+        node._direction = dirs[depth];
+      } else if (dirs.hasOwnProperty('default')) {
+        node._direction = dirs.default;
+      }
       if (raw._cor) node._cor = raw._cor;
       if (raw.children && Array.isArray(raw.children)) {
         node.children = raw.children.map(function(c) { return that._normalizeTree(c, depth + 1); });
@@ -479,6 +462,17 @@ var MindMap = (function() {
       return { minX: minX, minY: minY, maxX: maxX, maxY: maxY, w: maxX - minX, h: maxY - minY };
     },
 
+    // ── Internal: calc contagem from tree ───────────────────
+    _calcContagem: function() {
+      var contagem = {}, that = this;
+      function walk(n) {
+        if (n._cor) contagem[n._cor] = (contagem[n._cor] || 0) + 1;
+        if (n.children) n.children.forEach(walk);
+      }
+      if (this._state.tree) walk(this._state.tree);
+      return contagem;
+    },
+
     // ── Internal: render tree ───────────────────────────────
     _renderTree: function(root) {
       var nodesLayer = this._els.nodes;
@@ -494,11 +488,8 @@ var MindMap = (function() {
       function renderNode(nd) {
         var style = that._resolveConfigStyle();
         var nc;
-        if (nd._depth === 0) nc = CONFIG.nodeColors.root;
-        else if (nd._depth === 1) nc = CONFIG.nodeColors.client;
-        else if (nd._depth === 2) nc = CONFIG.nodeColors.pedido;
-        else nc = CONFIG.nodeColors.material;
-        nc = nc || { bg: '#f8fafc', color: '#1e293b', border: '#94a3b8' };
+        var depthColors = that.opts.nodeColors || CONFIG.nodeColors;
+        nc = depthColors[nd._depth] || depthColors.default || { bg: '#f8fafc', color: '#1e293b', border: '#94a3b8' };
         var el = document.createElement('div');
         el.className = 'mw-node';
         el.style.left = (nd._x - nd._w / 2 + ox) + 'px';
