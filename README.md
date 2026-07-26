@@ -1,8 +1,8 @@
 # mapa-mental-widget
 
-Widget de mapa mental interativo em JS puro (vanilla). Engine de layout de árvore com zoom/pan, collapse/expand, legenda, fullscreen e touch.
+Widget de mapa mental interativo em **vanilla JS**. Layout de árvore com zoom/pan, collapse/expand, filtro por cor, fullscreen e suporte touch.
 
-Zero dependências. Funciona em qualquer navegador moderno.
+Zero dependências. Qualquer navegador moderno.
 
 ## Install
 
@@ -19,77 +19,117 @@ npm install file:../mapa-mental-widget
 
 <div id="mapa" style="height:calc(100vh - 140px)"></div>
 <div id="legenda"></div>
-<div id="controles"></div>
 
 <script src="./node_modules/mapa-mental-widget/src/mindmap.js"></script>
 <script>
-  var data = {
-    treeData: { content: 'Produção', children: [/* ... */] },
-    contagem: { '#cbd5e1': 5, '#7dd3fc': 12, '#fed7aa': 3, '#f59e0b': 0, '#93c5fd': 7, '#bbf7d0': 15 },
-    totalClientes: 8
+  var treeData = {
+    text: 'Produção',
+    children: [
+      { text: 'Cliente A', children: [
+          { text: 'Pedido 123', children: [
+              { text: 'Aço 6.35', _cor: '#cbd5e1' }
+          ]}
+      ]}
+    ]
   };
 
-  var mm = new MindMap(document.getElementById('mapa'), data);
+  var mm = new MindMap(document.getElementById('mapa'), treeData);
 
-  // Legend and controls are optional
-  mm.renderLegend(document.getElementById('legenda'), data.contagem);
-  mm.renderControls(document.getElementById('controles'));
+  // Legenda (opcional)
+  mm.renderLegend(document.getElementById('legenda'), [
+    { cor: '#cbd5e1', label: 'Pendente' },
+    { cor: '#bbf7d0', label: 'Finalizado' }
+  ]);
 </script>
 ```
 
 ## API
 
-### new MindMap(containerEl, data, options?)
+### `new MindMap(container, treeData, opts?)`
 
-Cria instância do mapa mental. Renderiza automaticamente no constructor.
+Cria instância. Renderiza automaticamente.
 
 | Parâmetro | Tipo | Obrigatório | Descrição |
 |---|---|---|---|
-| `containerEl` | HTMLElement | sim | Elemento que receberá o mapa |
-| `data` | Object | sim | `{ treeData, contagem, totalClientes }` — mesma estrutura do `mapa-mental-core` |
-| `options` | Object | não | Opções de configuração (ver abaixo) |
+| `container` | HTMLElement | sim | Elemento que receberá o mapa |
+| `treeData` | Object | sim | Árvore com `{ text, children?, _cor? }` (ver formato abaixo) |
+| `opts` | Object | não | Configurações (ver abaixo) |
 
 #### Opções
 
 | Opção | Default | Descrição |
 |---|---|---|
-| `fullscreenEl` | `containerEl` | Elemento que recebe classe `.mw-fullscreen` ao maximizar |
-| `config` | `null` | Override de estilo global (bgColor, color, shape, fontSize, etc.) |
+| `directions` | `{ 0: 'coluna', 1: 'linha' }` | Direção dos filhos por profundidade: `'coluna'` ou `'linha'` |
+| `nodeColors` | `{ 0: {...}, 1: {...}, 2: {...}, default: {...} }` | Cores por profundidade: `{ bg, color, border }` |
+| `config` | `{}` | Override de estilo global (`shape`, `fontSize`, `shadow`, `padding`, ...) |
+| `fullscreenEl` | `container` | Elemento que recebe `.mw-fullscreen` ao maximizar |
+
+#### `opts.directions`
+
+```js
+directions: {
+  0: 'coluna',           // profundidade 0 → coluna
+  1: 'linha',            // profundidade 1 → linha
+  default: 'coluna'      // fallback
+}
+```
+
+#### `opts.nodeColors`
+
+```js
+nodeColors: {
+  0: { bg: '#1e293b', color: '#ffffff', border: '#334155' },
+  1: { bg: '#f8fafc', color: '#1e293b', border: '#94a3b8' },
+  default: { bg: '#fefce8', color: '#1e293b', border: '#eab308' }
+}
+```
+
+#### `opts.config`
+
+```js
+config: {
+  shape: 'rounded-rect',   // 'rounded-rect' | 'rect' | 'circle' | 'diamond' | 'cloud'
+  fontSize: 14,
+  fontWeight: 'normal',
+  shadow: false,
+  padding: '4px 10px',
+  bgColor: '#3a6ea5',
+  color: '#ffffff',
+  borderColor: '#2a5a8a',
+  borderWidth: 2
+}
+```
 
 ### Métodos
 
 | Método | Descrição |
 |---|---|
-| `.render()` | Renderiza/atualiza o mapa. Chamado automaticamente no constructor |
-| `.destroy()` | Remove eventos e limpa DOM |
+| `.render()` | Renderiza/atualiza. Chamado automaticamente no constructor |
+| `.destroy()` | Remove eventos e limpa o DOM |
 | `.expandAll()` | Expande todos os nós |
-| `.collapseAll()` | Colapsa todos os nós (exceto raiz) |
+| `.collapseAll()` | Colapsa todos os nós |
 | `.centerView()` | Centraliza a visualização |
-| `.setFilter(cor)` | Filtra nós por cor hex (ou `null` para limpar) |
-| `.renderLegend(containerEl, contagem)` | Renderiza legenda interativa em um elemento |
-| `.renderControls(containerEl)` | Renderiza botões de zoom/controle em um elemento |
+| `.setFilter(cor)` | Filtra nós por cor hex (ou `null` pra limpar) |
+| `.renderLegend(el, grupos?)` | Renderiza legenda interativa. `grupos: [{ cor, label }]` — se omitido, só mostra cores que aparecem |
+| `.renderControls(el)` | Renderiza botões de zoom/controle |
 | `.getState()` | Retorna `{ scale, offsetX, offsetY, collapsed, activeFilter }` |
 
 ### Formato do treeData
 
 ```js
 {
-  treeData: {
-    content: "Produção",
+  text: "Raiz",                        // label do nó (obrigatório)
+  _cor: "#cbd5e1",                     // cor opcional — sobrescreve nodeColors
+  children: [{
+    text: "Filho",
     children: [{
-      content: "Cliente X",          // depth=1
-      children: [{
-        content: "12345",            // depth=2
-        children: [{
-          content: "Aço 6.35",       // depth=3
-          _cor: "#cbd5e1"           // cor do pior status
-        }]
-      }]
+      text: "Folha",
+      _cor: "#bbf7d0"                  // cor só na folha
     }]
-  },
-  totalClientes: 12,
-  contagem: { "#cbd5e1": 5, "#7dd3fc": 12, "#fed7aa": 3, "#f59e0b": 0, "#93c5fd": 7, "#bbf7d0": 15 }
+  }]
 }
 ```
+
+Nós sem `_cor` usam `nodeColors` pela profundidade.
 
 ## Licença MIT
