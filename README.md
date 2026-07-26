@@ -132,6 +132,6 @@ config: {
 ```
 
 Nós sem `_cor` usam `nodeColors` pela profundidade.
-Nós sem `_direction` usam `opts.directions[profundidade]` (ou fallback `'coluna'`).
+Nós sem `_direction` usam `opts.directions[profundidade]` → `opts.directions.default` → herdam do pai → `'coluna'`.
 
 ## Licença MIT

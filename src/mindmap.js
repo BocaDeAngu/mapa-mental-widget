@@ -285,7 +285,7 @@ var MindMap = (function() {
         text: raw.text || raw.title || raw.name || '(sem texto)',
         children: [], _depth: depth, _id: randId(),
       };
-      // Direção: _direction individual > opts.directions[profundidade] > fallback 'coluna'
+      // Direção: _direction individual > opts.directions[profundidade] > herda do pai > 'coluna'
       if (raw._direction === 'linha' || raw._direction === 'coluna') {
         node._direction = raw._direction;
       } else {
