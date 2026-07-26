@@ -120,6 +120,7 @@ config: {
 {
   text: "Raiz",                        // label do nó (obrigatório)
   _cor: "#cbd5e1",                     // cor opcional — sobrescreve nodeColors
+  _direction: 'linha',                 // direção individual (opcional) — > opts.directions
   children: [{
     text: "Filho",
     children: [{
@@ -131,5 +132,6 @@ config: {
 ```
 
 Nós sem `_cor` usam `nodeColors` pela profundidade.
+Nós sem `_direction` usam `opts.directions[profundidade]` (ou fallback `'coluna'`).
 
 ## Licença MIT

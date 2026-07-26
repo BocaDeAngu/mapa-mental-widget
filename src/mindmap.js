@@ -285,11 +285,16 @@ var MindMap = (function() {
         text: raw.text || raw.title || raw.name || '(sem texto)',
         children: [], _depth: depth, _id: randId(),
       };
-      var dirs = this.opts.directions || { 0: 'coluna', 1: 'linha' };
-      if (dirs.hasOwnProperty(depth)) {
-        node._direction = dirs[depth];
-      } else if (dirs.hasOwnProperty('default')) {
-        node._direction = dirs.default;
+      // Direção: _direction individual > opts.directions[profundidade] > fallback 'coluna'
+      if (raw._direction === 'linha' || raw._direction === 'coluna') {
+        node._direction = raw._direction;
+      } else {
+        var dirs = this.opts.directions || { 0: 'coluna', 1: 'linha' };
+        if (dirs.hasOwnProperty(depth)) {
+          node._direction = dirs[depth];
+        } else if (dirs.hasOwnProperty('default')) {
+          node._direction = dirs.default;
+        }
       }
       if (raw._cor) node._cor = raw._cor;
       if (raw.children && Array.isArray(raw.children)) {
