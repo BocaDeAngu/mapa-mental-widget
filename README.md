@@ -135,3 +135,13 @@ Nós sem `_cor` usam `nodeColors` pela profundidade.
 Nós sem `_direction` usam `opts.directions[profundidade]` → `opts.directions.default` → herdam do pai → `'coluna'`.
 
 ## Licença MIT
+
+## Publicação (npm)
+
+Pacote público e gratuito (MIT). Publicar nova versão:
+
+1. Bump da versão em `package.json` — versões são **imutáveis** no npm, nunca republicar a mesma versão
+2. `npm publish` (login + 2FA)
+3. Conferir: `npm view mapa-mental-widget version`
+
+Consumido pelo produto CorteMES via `npm update mapa-mental-widget` no piloto + build da imagem docker.
