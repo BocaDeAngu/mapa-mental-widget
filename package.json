@@ -1,15 +1,26 @@
 {
   "name": "mapa-mental-widget",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Widget de mapa mental interativo em vanilla JS. Engine de layout de árvore com zoom/pan, collapse/expand, legenda, fullscreen, touch.",
   "main": "src/mindmap.js",
   "style": "src/mindmap.css",
   "license": "MIT",
-  "files": ["src/", "README.md"],
+  "files": [
+    "src/",
+    "README.md"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/acomar/mapa-mental-widget.git"
   },
-  "keywords": ["mapa-mental", "arvore", "mindmap", "widget", "visualizacao"],
-  "engines": { "node": ">=12" }
+  "keywords": [
+    "mapa-mental",
+    "arvore",
+    "mindmap",
+    "widget",
+    "visualizacao"
+  ],
+  "engines": {
+    "node": ">=12"
+  }
 }

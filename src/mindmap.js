@@ -110,7 +110,7 @@ var MindMap = (function() {
       this._q('.mw-loading').style.display = 'none';
 
       if (!this.treeData || !this.treeData.children || this.treeData.children.length === 0) {
-        this._els.nodes.innerHTML = '<div style="color:#667;padding:20px">Nenhum dado disponivel</div>';
+        this._els.nodes.innerHTML = '<div class="mw-empty">Nenhum dado disponivel</div>';
         return;
       }
 
@@ -182,14 +182,21 @@ var MindMap = (function() {
 
       var html = '<div class="mw-legend" id="' + this._uid('legend') + '">';
       html += '<span class="mw-legend-todos" id="' + this._uid('todos') + '">';
-      html += '<span class="mw-dot" style="background:transparent;border:2px solid var(--text2,#5a5a5a);display:inline-block;width:16px;height:16px;border-radius:50%;margin-right:4px;vertical-align:middle"></span> Todos <span class="mw-legend-total-cnt">' + (total ? '(' + total + ')' : '') + '</span></span>';
+      html += '<span class="mw-dot mw-dot-all"></span> Todos <span class="mw-legend-total-cnt">' + (total ? '(' + total + ')' : '') + '</span></span>';
       for (var i = 0; i < cores.length; i++) {
         var c = cores[i];
         var cnt = contagem && contagem[c.cor] ? contagem[c.cor] : 0;
-        html += '<span data-cor="' + c.cor + '"><span class="mw-dot" style="background:' + c.cor + '"></span> ' + c.label + ' <span class="mw-legend-cnt">(' + cnt + ')</span></span>';
+        html += '<span data-cor="' + c.cor + '"><span class="mw-dot"></span> ' + c.label + ' <span class="mw-legend-cnt">(' + cnt + ')</span></span>';
       }
       html += '</div>';
       containerEl.innerHTML = html;
+
+      // CSP: style attr é bloqueado (style-src sem unsafe-inline) — CSSOM não é.
+      // Sem isso as bolinhas da legenda ficam transparentes (cor não identificável).
+      containerEl.querySelectorAll('.mw-dot').forEach(function(dot) {
+        var chip = dot.closest('[data-cor]');
+        if (chip) dot.style.setProperty('--dot-bg', chip.getAttribute('data-cor'));
+      });
 
       var that = this;
       containerEl.querySelectorAll('[data-cor]').forEach(function(el) {
@@ -222,12 +229,12 @@ var MindMap = (function() {
     renderControls: function(containerEl) {
       if (!containerEl) return;
       containerEl.innerHTML =
-        '<label style="font-size:var(--fs-sm);color:var(--text2,#5a5a5a);display:flex;align-items:center;gap:4px;flex-shrink:0">Zoom <span class="mw-zoom-label" id="' + this._uid('zoomLabel') + '">100%</span></label>' +
-        '<button class="mw-btn zoom-win-btn" style="white-space:nowrap">🔍 Janela</button>' +
-        '<button class="mw-btn center-btn" style="white-space:nowrap">⛶ Centralizar</button>' +
-        '<button class="mw-btn expand-btn" style="white-space:nowrap">⊞ Expandir</button>' +
-        '<button class="mw-btn collapse-btn" style="white-space:nowrap">⊟ Contrair</button>' +
-        '<button class="mw-btn fullscreen-btn" style="white-space:nowrap">⛶ Tela cheia</button>';
+        '<label>Zoom <span class="mw-zoom-label" id="' + this._uid('zoomLabel') + '">100%</span></label>' +
+        '<button class="mw-btn zoom-win-btn">🔍 Janela</button>' +
+        '<button class="mw-btn center-btn">⛶ Centralizar</button>' +
+        '<button class="mw-btn expand-btn">⊞ Expandir</button>' +
+        '<button class="mw-btn collapse-btn">⊟ Contrair</button>' +
+        '<button class="mw-btn fullscreen-btn">⛶ Tela cheia</button>';
 
       var that = this;
       var zoomLabel = containerEl.querySelector('.mw-zoom-label');
