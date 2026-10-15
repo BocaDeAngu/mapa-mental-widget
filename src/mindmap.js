@@ -527,6 +527,7 @@ var MindMap = (function() {
           el.style.borderColor = nd._cor;
         }
         el.dataset.cor = nd._cor || '';
+        el.dataset.nid = nd._id;
         if (nd.children && nd.children.length > 0) {
           var btn = document.createElement('div');
           btn.className = 'mw-collapse-btn';
@@ -662,9 +663,20 @@ var MindMap = (function() {
         });
         return;
       }
+      var keep = {};
+      function mark(n) {
+        var hit = (n._cor === cor);
+        if (n.children) {
+          for (var i = 0; i < n.children.length; i++) {
+            if (mark(n.children[i])) hit = true;
+          }
+        }
+        if (hit) keep[n._id] = true;
+        return hit;
+      }
+      if (this._state.tree) mark(this._state.tree);
       nodes.querySelectorAll('.mw-node').forEach(function(el) {
-        var nc = el.dataset.cor;
-        if (nc === cor) {
+        if (el.dataset.cor === cor || keep[el.dataset.nid]) {
           el.classList.remove('mw-node-dimmed');
           el.classList.add('mw-node-highlight');
         } else {
