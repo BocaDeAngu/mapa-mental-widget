@@ -558,16 +558,16 @@ var MindMap = (function() {
             if (!rows[ri]) rows[ri] = [];
             rows[ri].push(nd.children[i]);
           }
-          // Leque sem espinha: bus lateral a direita das fileiras.
+          // Leque sem espinha: bus lateral a esquerda das fileiras.
           // A espinha central antiga cortava os nos no meio do mapa.
           var busX = x1;
           for (var rb = 0; rb < rows.length; rb++) {
             for (var ib = 0; ib < rows[rb].length; ib++) {
-              var re = rows[rb][ib]._x + ox + rows[rb][ib]._sw / 2;
-              if (re > busX) busX = re;
+              var re = rows[rb][ib]._x + ox - rows[rb][ib]._sw / 2;
+              if (re < busX) busX = re;
             }
           }
-          busX += CONFIG.nodeSpacing;
+          busX -= CONFIG.nodeSpacing;
           var prevY = y1;
           var mids = [];
           for (var r = 0; r < rows.length; r++) {
@@ -592,7 +592,7 @@ var MindMap = (function() {
             for (var rd = 0; rd < rows.length; rd++) {
               var rowd = rows[rd];
               if (rowd.length === 0 || mids[rd] === null) continue;
-              addPath(rowd[0]._x + ox, mids[rd], busX, mids[rd]);
+              addPath(busX, mids[rd], rowd[rowd.length - 1]._x + ox, mids[rd]);
               for (var id = 0; id < rowd.length; id++) {
                 var chd = rowd[id];
                 addPath(chd._x + ox, mids[rd], chd._x + ox, chd._y - chd._h / 2 + oy);
