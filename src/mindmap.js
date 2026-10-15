@@ -558,29 +558,46 @@ var MindMap = (function() {
             if (!rows[ri]) rows[ri] = [];
             rows[ri].push(nd.children[i]);
           }
+          // Leque sem espinha: bus lateral a direita das fileiras.
+          // A espinha central antiga cortava os nos no meio do mapa.
+          var busX = x1;
+          for (var rb = 0; rb < rows.length; rb++) {
+            for (var ib = 0; ib < rows[rb].length; ib++) {
+              var re = rows[rb][ib]._x + ox + rows[rb][ib]._sw / 2;
+              if (re > busX) busX = re;
+            }
+          }
+          busX += CONFIG.nodeSpacing;
           var prevY = y1;
+          var mids = [];
           for (var r = 0; r < rows.length; r++) {
             var row = rows[r];
-            if (row.length === 0) continue;
+            if (row.length === 0) { mids.push(null); continue; }
             var yTop = row[0]._y - row[0]._h / 2 + oy;
-            var midY = prevY + (yTop - prevY) / 2;
-            if (r === 0) addPath(x1, prevY, x1, midY);
-            var firstX = row[0]._x + ox;
-            var lastX = row[row.length - 1]._x + ox;
-            addPath(Math.min(x1, firstX), midY, Math.max(x1, lastX), midY);
-            for (var i2 = 0; i2 < row.length; i2++) {
-              var ch = row[i2];
-              var cx = ch._x + ox;
-              var cy = ch._y - ch._h / 2 + oy;
-              addPath(cx, midY, cx, cy);
-            }
+            mids.push(prevY + (yTop - prevY) / 2);
             var yBottom = -Infinity;
             for (var i2 = 0; i2 < row.length; i2++) {
               var b = row[i2]._y + row[i2]._extentBottom + oy;
               if (b > yBottom) yBottom = b;
             }
-            if (r < rows.length - 1) addPath(x1, midY, x1, yBottom);
             prevY = yBottom;
+          }
+          var lastMid = null;
+          for (var rl = mids.length - 1; rl >= 0; rl--) {
+            if (mids[rl] !== null) { lastMid = mids[rl]; break; }
+          }
+          if (lastMid !== null) {
+            addPath(x1, y1, busX, y1);
+            addPath(busX, y1, busX, lastMid);
+            for (var rd = 0; rd < rows.length; rd++) {
+              var rowd = rows[rd];
+              if (rowd.length === 0 || mids[rd] === null) continue;
+              addPath(rowd[0]._x + ox, mids[rd], busX, mids[rd]);
+              for (var id = 0; id < rowd.length; id++) {
+                var chd = rowd[id];
+                addPath(chd._x + ox, mids[rd], chd._x + ox, chd._y - chd._h / 2 + oy);
+              }
+            }
           }
           nd.children.forEach(renderConns);
         } else {
