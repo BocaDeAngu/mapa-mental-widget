@@ -19,6 +19,7 @@
 .mw-nodes-layer{position:absolute;top:0;left:0;z-index:2}
 .mw-node{position:absolute;display:flex;align-items:center;justify-content:center;text-align:center;cursor:pointer;transition:opacity .2s;user-select:none;white-space:nowrap;min-width:40px;min-height:30px;font-family:'Segoe UI',system-ui,sans-serif;z-index:2}
 .mw-node .mw-node-text{pointer-events:none}
+.mw-node-link .mw-node-text{text-decoration:underline}
 .mw-dot{display:inline-block;width:16px;height:16px;border-radius:50%;margin-right:4px;flex-shrink:0;vertical-align:middle;background:var(--dot-bg,transparent)}
 .mw-dot-all{border:2px solid var(--text2,#5a5a5a)}
 .mw-node .mw-collapse-btn{position:absolute;bottom:-9px;left:50%;transform:translateX(-50%);width:18px;height:18px;border-radius:50%;background:#1e2a4a;border:2px solid #2a3a6a;color:#e0e0e0;font-size:var(--fs-xs);line-height:14px;text-align:center;cursor:pointer;z-index:5;display:none;transition:.15s}

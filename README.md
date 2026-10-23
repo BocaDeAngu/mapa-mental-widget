@@ -63,6 +63,8 @@ Cria instância. Renderiza automaticamente.
 | `nodeColors` | `{ 0: {...}, 1: {...}, 2: {...}, default: {...} }` | Cores por profundidade: `{ bg, color, border }` |
 | `config` | `{}` | Override de estilo global (`shape`, `fontSize`, `shadow`, `padding`, ...) |
 | `fullscreenEl` | `container` | Elemento que recebe `.mw-fullscreen` ao maximizar |
+| `onNodeClick` | — | `fn(nó, evento)` chamado antes da ação padrão; se retornar `false`, cancela (sem navegar/colapsar) |
+| `linkTitle` | `'Abrir link'` | Tooltip (`title` nativo) dos nós com `_href` |
 
 #### `opts.directions`
 
@@ -121,6 +123,7 @@ config: {
   text: "Raiz",                        // label do nó (obrigatório)
   _cor: "#cbd5e1",                     // cor opcional — sobrescreve nodeColors
   _direction: 'linha',                 // direção individual (opcional) — > opts.directions
+  _href: "/pedidos/123",              // link opcional — click no nó folha navega (pais continuam colapsando)
   children: [{
     text: "Filho",
     children: [{

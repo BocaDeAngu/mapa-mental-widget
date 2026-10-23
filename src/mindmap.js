@@ -304,6 +304,7 @@ var MindMap = (function() {
         }
       }
       if (raw._cor) node._cor = raw._cor;
+      if (raw._href) node._href = String(raw._href);
       if (raw.children && Array.isArray(raw.children)) {
         node.children = raw.children.map(function(c) { return that._normalizeTree(c, depth + 1); });
       }
@@ -535,9 +536,18 @@ var MindMap = (function() {
           btn.onclick = function(e) { e.stopPropagation(); that._toggleCollapse(nd._id, root); };
           el.appendChild(btn);
         }
+        if (nd._href) {
+          el.classList.add('mw-node-link');
+          el.setAttribute('title', that.opts.linkTitle || 'Abrir link');
+        }
         el.onclick = function(e) {
+          if (typeof that.opts.onNodeClick === 'function') {
+            if (that.opts.onNodeClick(nd, e) === false) return;
+          }
           if (nd.children && nd.children.length > 0 && !e.target.classList.contains('mw-collapse-btn')) {
             that._toggleCollapse(nd._id, root);
+          } else if (nd._href) {
+            window.location.href = nd._href;
           }
         };
         nodesLayer.appendChild(el);
